@@ -1,3 +1,5 @@
+import java.nio.file.Paths
+
 buildscript {
     if (project == rootProject) {
         repositories {
@@ -17,6 +19,26 @@ apply plugin: 'com.android.library'
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
+println("buildDir:" + rootProject.buildDir)
+static def findNodeModules(baseDir) {
+  def basePath = baseDir.toPath().normalize()
+  // Node's module resolution algorithm searches up to the root directory,
+  // after which the base path will be null
+  while (basePath) {
+    def nodeModulesPath = Paths.get(basePath.toString(), "node_modules")
+    def reactNativePath = Paths.get(nodeModulesPath.toString(), "react-native")
+    if (nodeModulesPath.toFile().exists() && reactNativePath.toFile().exists()) {
+      return nodeModulesPath.toString()
+    }
+    basePath = basePath.getParent()
+  }
+  throw new GradleException("Failed to find node_modules/ path!")
+}
+def nodeModules = findNodeModules(projectDir)
+def prebuiltDir = "$buildDir/react-native-0*/jni"
+def reactProperties = new Properties()
+file("$nodeModules/react-native/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
+def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME").split("\\.")[1].toInteger()
 
 android {
     compileSdkVersion safeExtGet('XlogJsi_compileSdkVersion', 29)
@@ -30,6 +52,10 @@ android {
             cmake {
                 cppFlags "-O2 -frtti -fexceptions -Wall -fstack-protector-all"
                 abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
+                arguments '-DANDROID_STL=c++_shared',
+                  "-DREACT_NATIVE_VERSION=${REACT_NATIVE_VERSION}",
+                  "-DNODE_MODULES_DIR=${nodeModules}",
+                  "-DBUILD_DIR=${buildDir}"
             }
         }
 
@@ -63,10 +89,32 @@ repositories {
     }
     google()
     mavenCentral()
-    jcenter()
+}
+
+configurations {
+  cmake_depends
 }
 
 dependencies {
     //noinspection GradleDynamicVersion
     implementation "com.facebook.react:react-native:+"  // From node_modules
+  api "com.tencent.mars:mars-xlog:1.2.6"
+  cmake_depends "com.tencent.mars:mars-xlog:1.2.6"
 }
+
+// 作用是build的时候把 mars-xlog 包里面的 so文件拷贝到 src/main/jniLibs 文件夹
+task resolveDependencies {
+  project.configurations.each { configuration ->
+    if ("cmake_depends".equalsIgnoreCase(configuration.name)) {
+      def lib = configuration.resolve()[0]
+      println("xuanping:" + "${project.buildDir}")
+      println("cmake_depends:" + lib.toString() + " into: " + "${project.rootDir}/${project.name}/src/main/jniLibs/")
+      copy {
+        from zipTree(lib)
+        into "${project.buildDir}/unzipXlog/"
+        include "jni/**/*.so"
+      }
+    }
+  }
+}
+build.dependsOn resolveDependencies

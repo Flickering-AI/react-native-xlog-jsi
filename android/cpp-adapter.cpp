@@ -1,8 +1,8 @@
 #include <jni.h>
-#include "example.h"
+#include "react-native-xlog-jsi.h"
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_com_reactnativexlogjsi_XlogJsiModule_nativeMultiply(JNIEnv *env, jclass type, jint a, jint b) {
-    return example::multiply(a, b);
+Java_com_reactnativexlogjsi_XlogJsiModule_interceptAllReactNativeLog(JNIEnv *env, jclass clazz) {
+    return ReactNativeXLog::interceptAllReactNativeLog();
 }

@@ -8,4 +8,6 @@
 
 @interface XlogJsi : NSObject <RCTBridgeModule>
 
++(void)applicationWillTerminate;
+
 @end

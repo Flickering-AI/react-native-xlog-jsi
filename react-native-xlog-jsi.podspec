@@ -16,4 +16,7 @@ Pod::Spec.new do |s|
   s.source_files = "ios/**/*.{h,m,mm}", "cpp/**/*.{h,cpp}"
 
   s.dependency "React-Core"
+  
+  s.public_header_files = 'cpp/*.h' 'ios/mars.framework/Headers/**/*.h'
+  s.vendored_frameworks = 'ios/mars.framework'
 end

@@ -1,8 +1,8 @@
 #ifndef EXAMPLE_H
 #define EXAMPLE_H
 
-namespace example {
-  int multiply(float a, float b);
+namespace ReactNativeXLog {
+  int interceptAllReactNativeLog();
 }
 
 #endif /* EXAMPLE_H */

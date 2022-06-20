@@ -1,22 +1,16 @@
 # react-native-xlog-jsi
 
-It allows you to easily use MMKV inside your React Native applications.
+It allows you to easily use mars-xlog inside your React Native applications.
 
 ## Installation
 
 ```sh
-npm install react-native-xlog-jsi
+yarn add react-native-xlog-jsi
 ```
 
 ## Usage
 
-```js
-import { multiply } from "react-native-xlog-jsi";
-
-// ...
-
-const result = await multiply(3, 7);
-```
+No action needed.
 
 ## Contributing
 
