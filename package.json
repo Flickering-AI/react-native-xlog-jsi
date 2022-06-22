@@ -1,7 +1,7 @@
 {
   "name": "react-native-xlog-jsi",
   "version": "0.2.0",
-  "description": "It allows you to easily use MMKV inside your React Native applications.",
+  "description": "It allows you to easily use https://github.com/Tencent/mars#mars-xlog inside your React Native applications.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
@@ -36,13 +36,13 @@
     "ios",
     "android"
   ],
-  "repository": "https://github.com/lxp-git/react-native-xlog-jsi",
+  "repository": "https://github.com/Flickering-AI/react-native-xlog-jsi",
   "author": "Xuanping <a845326948@gmail.com> (https://github.com/lxp-git)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lxp-git/react-native-xlog-jsi/issues"
+    "url": "https://github.com/Flickering-AI/react-native-xlog-jsi/issues"
   },
-  "homepage": "https://github.com/lxp-git/react-native-xlog-jsi#readme",
+  "homepage": "https://github.com/Flickering-AI/react-native-xlog-jsi#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
