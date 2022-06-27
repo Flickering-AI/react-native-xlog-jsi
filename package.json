@@ -86,7 +86,9 @@
   "release-it": {
     "git": {
       "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}"
+      "tagName": "v${version}",
+      "requireCleanWorkingDir": false,
+      "addFiles": ["package.json"]
     },
     "npm": {
       "publish": true
