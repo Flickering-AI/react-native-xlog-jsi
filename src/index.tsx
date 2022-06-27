@@ -6,6 +6,11 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo managed workflow\n';
 
+// global func declaration for JSI functions
+declare global {
+  function xlogAppenderFlush(isSync: boolean): unknown;
+}
+
 const XlogJsi = NativeModules.XlogJsi
   ? NativeModules.XlogJsi
   : new Proxy(
@@ -17,6 +22,20 @@ const XlogJsi = NativeModules.XlogJsi
       }
     );
 
-export function multiply(a: number, b: number): Promise<number> {
-  return XlogJsi.multiply(a, b);
+export default class Xlog {
+  constructor(
+    rootDirectory: string = 'xlogs',
+    namePrefix: string = 'XLog',
+    cacheDays: number = 3,
+    isConsoleLogOpen: boolean = !!__DEV__
+  ) {
+    if (!global.xlogAppenderFlush) {
+      XlogJsi.install(rootDirectory, namePrefix, cacheDays, isConsoleLogOpen);
+    }
+  }
+
+  static async appenderFlush(isSync: boolean = true) {
+    return global.xlogAppenderFlush(isSync);
+    // return XlogJsi.appenderFlush(isSync);
+  }
 }

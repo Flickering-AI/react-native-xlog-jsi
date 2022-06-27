@@ -1,7 +1,5 @@
 package com.reactnativexlogjsi;
 
-import androidx.annotation.NonNull;
-
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -16,31 +14,31 @@ public class XlogJsiModule extends ReactContextBaseJavaModule {
 
     public XlogJsiModule(ReactApplicationContext reactContext) {
         super(reactContext);
-      String externalPath = reactContext.getExternalFilesDir(null).getAbsolutePath();
-      String logPath = externalPath + "/ahaaa_math/ahaaa_math_log";
-      // this is necessary, or may crash for SIGBUS
-      String cachePath = reactContext.getFilesDir().toString() + "/ahaaa_math_log";
+    }
 
-      // init xlog
-      Log.setLogImp(new Xlog());
-      if (BuildConfig.DEBUG) {
-        Log.appenderOpen(Xlog.LEVEL_ALL, Xlog.AppednerModeSync, cachePath, logPath, "AhaaaMath", 3);
-        Log.setConsoleLogOpen(true);
-      } else {
-        Log.appenderOpen(
-          Xlog.LEVEL_ALL,
-          Xlog.AppednerModeSync,
-          cachePath,
-          logPath,
-          "AhaaaMath",
-          3
-        );
-        Log.setConsoleLogOpen(false);
-      }
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public boolean install(String rootDirectory, String namePrefix, int cacheDays, boolean isConsoleLogOpen) {
+        try {
+            ReactApplicationContext reactContext = getReactApplicationContext();
+            Log.setLogImp(new Xlog());
+            Log.appenderOpen(Xlog.LEVEL_ALL, Xlog.AppednerModeAsync, rootDirectory, rootDirectory, namePrefix, cacheDays);
+            Log.setConsoleLogOpen(isConsoleLogOpen);
+
+            interceptAllReactNativeLog(reactContext.getJavaScriptContextHolder().get());
+            return true;
+        } catch (Exception exception) {
+            Log.e(NAME, "Failed to install Xlog JSI Bindings!", exception);
+            return false;
+        }
+    }
+
+    @ReactMethod
+    public void appenderFlush(boolean isSync, Promise promise) {
+        Log.appenderFlushSync(isSync);
+        promise.resolve(true);
     }
 
     @Override
-    @NonNull
     public String getName() {
         return NAME;
     }
@@ -51,10 +49,9 @@ public class XlogJsiModule extends ReactContextBaseJavaModule {
           System.loadLibrary("marsxlog");
             // Used to load the 'native-lib' library on application startup.
             System.loadLibrary("cpp");
-            interceptAllReactNativeLog();
         } catch (Exception ignored) {
         }
     }
 
-    public static native int interceptAllReactNativeLog();
+    public static native int interceptAllReactNativeLog(long jsiPtr);
 }

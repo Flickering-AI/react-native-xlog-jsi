@@ -11,12 +11,12 @@ Pod::Spec.new do |s|
   s.authors      = package["author"]
 
   s.platforms    = { :ios => "10.0" }
-  s.source       = { :git => "https://github.com/lxp-git/react-native-xlog-jsi.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/Flickering-AI/react-native-xlog-jsi.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm}", "cpp/**/*.{h,cpp}"
 
   s.dependency "React-Core"
-  
+
   s.public_header_files = 'cpp/*.h' 'ios/mars.framework/Headers/**/*.h'
   s.vendored_frameworks = 'ios/mars.framework'
 end

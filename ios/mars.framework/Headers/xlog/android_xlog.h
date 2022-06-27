@@ -13,7 +13,7 @@
 #ifndef __ANDROID_XLOG__
 #define __ANDROID_XLOG__
 
-#include "xlogger/xloggerbase.h"
+#include "xloggerbase.h"
 
 static void __ComLogV(int level, const char *tag, const char* file, const char* func, int line, const char* fmt, va_list args) {
  	struct XLoggerInfo_t info;
@@ -64,3 +64,4 @@ static void __ComLog(int level, const char *tag, const char* file, const char* f
 
 #endif
 
+extern "C" JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_appenderFlush(JNIEnv *env, jobject, jlong _log_instance_ptr, jboolean _is_sync);
