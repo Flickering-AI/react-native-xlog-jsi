@@ -2,6 +2,8 @@
 
 It allows you to easily use mars-xlog inside your React Native applications.
 
+[![Node.js Package](https://github.com/Flickering-AI/react-native-xlog-jsi/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/Flickering-AI/react-native-xlog-jsi/actions/workflows/npm-publish.yml)
+
 ## Installation
 
 ```sh
@@ -10,7 +12,15 @@ yarn add react-native-xlog-jsi
 
 ## Usage
 
-No action needed.
+```javascript
+import Xlog from 'react-native-xlog-jsi';
+
+// init
+const xlog = new Xlog();
+
+// flush before pull xlog file
+Xlog.appenderFlush();
+```
 
 ## Contributing
 
