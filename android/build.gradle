@@ -79,6 +79,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    packagingOptions {
+        excludes = ["**/libc++_shared.so", "**/libfbjni.so", "**/libreactnativejni.so", "**/libjsi.so", "**/libfb.so", "**/MANIFEST.MF", "**/libmarsxlog.so"]
+    }
 }
 
 repositories {

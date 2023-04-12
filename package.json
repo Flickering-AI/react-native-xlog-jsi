@@ -34,7 +34,9 @@
   "keywords": [
     "react-native",
     "ios",
-    "android"
+    "android",
+    "xlog",
+    "mars-xlog"
   ],
   "repository": "https://github.com/Flickering-AI/react-native-xlog-jsi",
   "author": "Xuanping <a845326948@gmail.com> (https://github.com/lxp-git)",
