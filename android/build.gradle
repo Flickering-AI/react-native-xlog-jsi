@@ -117,7 +117,7 @@ task resolveDependencies {
         include "jni/**/*.so"
       }
       copy {
-        from zipTree("${nodeModules}/react-native/android/com/facebook/react/react-native/${REACT_NATIVE_VERSION_NAME}/react-native-${REACT_NATIVE_VERSION_NAME}.aar")
+        from zipTree("${nodeModules}/react-native/android/com/facebook/react/react-native/${REACT_NATIVE_VERSION_NAME}/react-native-${REACT_NATIVE_VERSION_NAME}-release.aar")
         into "${project.buildDir}/unzipReactNative/"
         include "jni/**/*.so"
       }
