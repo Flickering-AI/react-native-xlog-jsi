@@ -10,7 +10,7 @@ buildscript {
         }
 
         dependencies {
-            classpath 'com.android.tools.build:gradle:3.5.3'
+            classpath "com.android.tools.build:gradle:7.3.1"
         }
     }
 }
@@ -22,30 +22,100 @@ def safeExtGet(prop, fallback) {
 }
 println("buildDir:" + rootProject.buildDir)
 static def findNodeModules(baseDir) {
-  def basePath = baseDir.toPath().normalize()
-  // Node's module resolution algorithm searches up to the root directory,
-  // after which the base path will be null
-  while (basePath) {
-    def nodeModulesPath = Paths.get(basePath.toString(), "node_modules")
-    def reactNativePath = Paths.get(nodeModulesPath.toString(), "react-native")
-    if (nodeModulesPath.toFile().exists() && reactNativePath.toFile().exists()) {
-      return nodeModulesPath.toString()
+    def basePath = baseDir.toPath().normalize()
+    // Node's module resolution algorithm searches up to the root directory,
+    // after which the base path will be null
+    while (basePath) {
+        def nodeModulesPath = Paths.get(basePath.toString(), "node_modules")
+        def reactNativePath = Paths.get(nodeModulesPath.toString(), "react-native")
+        if (nodeModulesPath.toFile().exists() && reactNativePath.toFile().exists()) {
+            return nodeModulesPath.toString()
+        }
+        basePath = basePath.getParent()
     }
-    basePath = basePath.getParent()
-  }
-  throw new GradleException("Failed to find node_modules/ path!")
+    throw new GradleException("Failed to find node_modules/ path!")
 }
 def nodeModules = findNodeModules(projectDir)
-def prebuiltDir = "$buildDir/react-native-0*/jni"
-def reactProperties = new Properties()
-file("$nodeModules/react-native/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
-def REACT_NATIVE_VERSION_NAME = reactProperties.getProperty("VERSION_NAME")
+
+static def findNodeModulePath(baseDir, packageName) {
+    def basePath = baseDir.toPath().normalize()
+    // Node's module resolution algorithm searches up to the root directory,
+    // after which the base path will be null
+    while (basePath) {
+        def candidatePath = Paths.get(basePath.toString(), "node_modules", packageName)
+        if (candidatePath.toFile().exists()) {
+            return candidatePath.toString()
+        }
+        basePath = basePath.getParent()
+    }
+    return null
+}
+
+def safeAppExtGet(prop, fallback) {
+    def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
+    appProject?.ext?.has(prop) ? appProject.ext.get(prop) : fallback
+}
+
+def resolveBuildType() {
+    Gradle gradle = getGradle()
+    String tskReqStr = gradle.getStartParameter().getTaskRequests()['args'].toString()
+    return tskReqStr.contains('Release') ? 'release' : 'debug'
+}
+
+def isNewArchitectureEnabled() {
+    // To opt-in for the New Architecture, you can either:
+    // - Set `newArchEnabled` to true inside the `gradle.properties` file
+    // - Invoke gradle with `-newArchEnabled=true`
+    // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
+    return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
+}
+
+def resolveReactNativeDirectory() {
+    def reactNativeLocation = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null)
+    if (reactNativeLocation != null) {
+        return file(reactNativeLocation)
+    }
+
+    // monorepo workaround
+    // react-native can be hoisted or in project's own node_modules
+    def reactNativeFromProjectNodeModules = file("${rootProject.projectDir}/../node_modules/react-native")
+    if (reactNativeFromProjectNodeModules.exists()) {
+        return reactNativeFromProjectNodeModules
+    }
+
+    def reactNativeFromNodeModulesWithReanimated = file("${projectDir}/../../react-native")
+    if (reactNativeFromNodeModulesWithReanimated.exists()) {
+        return reactNativeFromNodeModulesWithReanimated
+    }
+
+    throw new GradleException(
+            "[Reanimated] Unable to resolve react-native location in node_modules. You should project extension property (in `app/build.gradle`) `REACT_NATIVE_NODE_MODULES_DIR` with path to react-native."
+    )
+}
+
+def getReanimatedMajorVersion() {
+    def (major, minor, patch) = getReanimatedVersion().tokenize('.')
+    return major.toInteger()
+}
+
+def toPlatformFileString(String path) {
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        path = path.replace(File.separatorChar, '/' as char)
+    }
+    return path
+}
+
+def reactNativeRootDir = resolveReactNativeDirectory()
 
 android {
-    compileSdkVersion safeExtGet('XlogJsi_compileSdkVersion', 29)
+    ndkVersion rootProject.ext.ndkVersion
+    compileSdkVersion safeExtGet('compileSdkVersion', 34)
+    buildFeatures {
+        prefab true
+    }
     defaultConfig {
-        minSdkVersion safeExtGet('XlogJsi_minSdkVersion', 16)
-        targetSdkVersion safeExtGet('XlogJsi_targetSdkVersion', 29)
+        minSdkVersion safeExtGet('minSdkVersion', 16)
+        targetSdkVersion safeExtGet('targetSdkVersion', 34)
         versionCode 1
         versionName "1.0"
 
@@ -54,8 +124,8 @@ android {
                 cppFlags "-O2 -frtti -fexceptions -Wall -fstack-protector-all"
                 abiFilters 'armeabi-v7a', 'arm64-v8a' // xlog does not support x86 and x86_64
                 arguments '-DANDROID_STL=c++_shared',
-                  "-DNODE_MODULES_DIR=${nodeModules}",
-                  "-DBUILD_DIR=${buildDir}"
+                        "-DNODE_MODULES_DIR=${nodeModules}",
+                        "-DBUILD_DIR=${buildDir}"
             }
         }
 
@@ -86,42 +156,60 @@ android {
 }
 
 repositories {
+    mavenCentral()
     mavenLocal()
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-        url("$rootDir/../node_modules/react-native/android")
+        url "$reactNativeRootDir/android"
+    }
+    maven {
+        // Android JSC is installed from npm
+        url "$reactNativeRootDir/../jsc-android/dist"
     }
     google()
-    mavenCentral()
 }
 
 configurations {
-  cmake_depends
+    cmake_depends
 }
 
 dependencies {
-    //noinspection GradleDynamicVersion
-  implementation "com.facebook.react:react-native:+"  // From node_modules
-  api "com.tencent.mars:mars-xlog:1.2.6"
-  cmake_depends "com.tencent.mars:mars-xlog:1.2.6"
+    implementation "com.facebook.react:react-android" // version substituted by RNGP
+    implementation "com.facebook.react:hermes-android" // version substituted by RNGP
+    api "com.tencent.mars:mars-xlog:1.2.6"
+    cmake_depends "com.tencent.mars:mars-xlog:1.2.6"
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name.contains("configureCMakeDebug")) {
+        rootProject.getTasksByName("packageReactNdkDebugLibs", true).forEach {
+            task.dependsOn(it)
+        }
+    }
+    // We want to add a dependency for both configureCMakeRelease and configureCMakeRelWithDebInfo
+    if (task.name.contains("configureCMakeRel")) {
+        rootProject.getTasksByName("packageReactNdkReleaseLibs", true).forEach {
+            task.dependsOn(it)
+        }
+    }
 }
 
 // 作用是build的时候把 mars-xlog 包里面的 so文件拷贝到 src/main/jniLibs 文件夹
-task resolveDependencies {
-  project.configurations.each { configuration ->
-    if ("cmake_depends".equalsIgnoreCase(configuration.name)) {
-      def lib = configuration.resolve()[0]
-      copy {
-        from zipTree(lib)
-        into "${project.buildDir}/unzipXlog/"
-        include "jni/**/*.so"
-      }
-      copy {
-        from zipTree("${nodeModules}/react-native/android/com/facebook/react/react-native/${REACT_NATIVE_VERSION_NAME}/react-native-${REACT_NATIVE_VERSION_NAME}-release.aar")
-        into "${project.buildDir}/unzipReactNative/"
-        include "jni/**/*.so"
-      }
+tasks.register('resolveDependencies') {
+    project.configurations.each { configuration ->
+        if ("cmake_depends".equalsIgnoreCase(configuration.name)) {
+            def lib = configuration.resolve()[0]
+            copy {
+                from zipTree(lib)
+                into "${project.buildDir}/unzipXlog/"
+                include "jni/**/*.so"
+            }
+//      copy {
+//        from zipTree("${nodeModules}/react-native/android/com/facebook/react/react-native/${REACT_NATIVE_VERSION_NAME}/react-native-${REACT_NATIVE_VERSION_NAME}-release.aar")
+//        into "${project.buildDir}/unzipReactNative/"
+//        include "jni/**/*.so"
+//      }
+        }
     }
-  }
 }
 build.dependsOn resolveDependencies

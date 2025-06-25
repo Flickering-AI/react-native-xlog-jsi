@@ -47,8 +47,7 @@ public class XlogJsiModule extends ReactContextBaseJavaModule {
         try {
           System.loadLibrary("c++_shared");
           System.loadLibrary("marsxlog");
-            // Used to load the 'native-lib' library on application startup.
-            System.loadLibrary("cpp");
+          System.loadLibrary("reactnativexlog");
         } catch (Exception ignored) {
         }
     }
