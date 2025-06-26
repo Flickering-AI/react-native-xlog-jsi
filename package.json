@@ -1,6 +1,6 @@
 {
   "name": "react-native-xlog-jsi",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "It allows you to easily use https://github.com/Tencent/mars#mars-xlog inside your React Native applications.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
