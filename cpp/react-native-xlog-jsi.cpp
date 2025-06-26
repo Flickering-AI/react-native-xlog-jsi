@@ -2,7 +2,7 @@
 
 namespace ReactNativeXLog {
 	int interceptAllReactNativeLog(jsi::Runtime& jsiRuntime) {
-#ifdef ANDROID
+#ifdef __ANDROID__
         setLogHandler([](int priority, const char *tag, const char *message) {
             __ComLog(priority - 2, tag, message, "", 0, "");
         });
@@ -20,7 +20,7 @@ namespace ReactNativeXLog {
 //                                                                           jsi::Object config = arguments[0].asObject(runtime);
 //                                                                           jsi::Value value = config.getProperty(runtime, "isSync");
                                                                            bool isSync = arguments[0].getBool();
-#ifdef ANDROID
+#ifdef __ANDROID__
                                                                            Java_com_tencent_mars_xlog_Xlog_appenderFlush(
                                                                                    nullptr, nullptr, 0, isSync);
 //                                                                           std::string className = "com/tencent/mars/xlog/Log";

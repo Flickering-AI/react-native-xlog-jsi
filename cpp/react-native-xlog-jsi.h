@@ -3,7 +3,7 @@
 
 #include <jsi/jsi.h>
 
-#ifdef ANDROID
+#ifdef __ANDROID__
 #include <jni.h>
 #include <fb/log.h>
 #include "xlog/android_xlog.h"
